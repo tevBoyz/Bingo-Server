@@ -54,13 +54,12 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', ({player, room}) => {
       const roomExists = rooms.includes(room);
-      console.log(roomExists)
+      const players = getRoomPlayers(room);
 
       if(roomExists){
-        const players = getRoomPlayers(room);
 
-        if(!players){
-          socket.emit('joinError', 'Room does not exist');
+        if(players.length >= 15){
+          socket.emit('playerLimitExceeded', {message: '15 players per room is allowed!'});
         }
 
       const playerN = playerJoin(socket.id, player, room);

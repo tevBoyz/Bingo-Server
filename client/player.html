@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Player Panel</h1>
+    <input id="playerName" placeholder="Your name" />
+    <input id="roomCode" placeholder="Room Code" />
+    <button onclick="joinRoom()">Join Room</button>
+    <button onclick="bingo()">Bingo!</button>
+
+    <p id="roomInfo"></p>
+    <ul id="players"></ul>
+
+    <p id="calledNumbers">Numbers Called:</p>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      const socket = io("http://localhost:3000"); // Point to your Node server
+    </script>
+    <script src="player.js"></script>
+  </body>
+</html>

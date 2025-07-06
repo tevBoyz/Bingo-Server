@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Host</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Host Panel</h1>
+    <input id="hostName" placeholder="Your name" />
+    <button onclick="createRoom()">Create Room</button>
+    <p id="roomInfo"></p>
+    <ul id="players"></ul>
+
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="startCallingNumber()">Start Calling Numbers</button>
+    <button onclick="bingo()">Bingo!</button>
+
+    <p id="calledNumbers">Numbers Called:</p>
+  </body>
+  <!-- The correct way to include socket.io -->
+  <!-- Use CDN instead -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:3000"); // Point to your Node server
+  </script>
+  <script src="main.js"></script>
+</html>

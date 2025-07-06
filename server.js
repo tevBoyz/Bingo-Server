@@ -19,6 +19,7 @@ const { generateBingoCard, checkBingo } = require('./utils/bingo');
   let callIntervals = {};
   let claimedWinners = {}; // roomCode -> array of winners
   let gameState = {}; //Track the state of a room idle | playing 
+  let rooms = [];
 
 
 // Serve static files
@@ -37,6 +38,7 @@ io.on('connection', (socket) => {
   //Create room
   socket.on('host',({name}) =>{
     let roomCode = generateRoomCode();
+    rooms.push(roomCode);
 
     gameState[roomCode] = 'idle'; //State idle for newly created room
 
@@ -51,9 +53,11 @@ io.on('connection', (socket) => {
     })
 
   socket.on('joinRoom', ({player, room}) => {
-    
-      console.log(player, room)
-      const players = getRoomPlayers(room);
+      const roomExists = rooms.includes(room);
+      console.log(roomExists)
+
+      if(roomExists){
+        const players = getRoomPlayers(room);
 
         if(!players){
           socket.emit('joinError', 'Room does not exist');
@@ -66,6 +70,10 @@ io.on('connection', (socket) => {
       socket.to(room).emit('playerJoined', {room: room, players: getRoomPlayers(room)});
 
       io.to(room).emit('playerJoined', {room:room, players: getRoomPlayers(room)});
+      }
+      else{
+        io.to(socket.id).emit('roomNotFound', {message: "Room not Found"});
+      }
     
 
   });

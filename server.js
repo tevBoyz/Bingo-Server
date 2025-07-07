@@ -111,53 +111,48 @@ io.on('connection', (socket) => {
 
 
   socket.on('callNumber', ({ roomCode }) => {
-    console.log("called callNumber")
-  if (callIntervals[roomCode]) return; // prevent multiple intervals
+    if (callIntervals[roomCode]) return; // prevent multiple intervals
 
-  calledNumbers[roomCode] = new Set();
+    calledNumbers[roomCode] = new Set();
 
-  callIntervals[roomCode] = setInterval(() => {
-    if (calledNumbers[roomCode].size >= 75) {
-      clearInterval(callIntervals[roomCode]);
-      io.to(roomCode).emit('noMoreNumbers');
-      return;
-    }
+    callIntervals[roomCode] = setInterval(() => {
+      if (calledNumbers[roomCode].size >= 75) {
+        clearInterval(callIntervals[roomCode]);
+        io.to(roomCode).emit('noMoreNumbers');
+        return;
+      }
 
-    let nextNumber;
-    do {
-      nextNumber = Math.floor(Math.random() * 75) + 1;
-    } while (calledNumbers[roomCode].has(nextNumber));
+      let nextNumber;
+      do {
+        nextNumber = Math.floor(Math.random() * 75) + 1;
+      } while (calledNumbers[roomCode].has(nextNumber));
 
-    calledNumbers[roomCode].add(nextNumber);
-    
-    io.to(roomCode).emit('numberCalled', {
-      number: nextNumber,
-      allNumbers: Array.from(calledNumbers[roomCode]),
-    });
-  }, 5000); // every 5 seconds
+      calledNumbers[roomCode].add(nextNumber);
+      
+      io.to(roomCode).emit('numberCalled', {
+        number: nextNumber,
+        allNumbers: Array.from(calledNumbers[roomCode]),
+      });
+    }, 5000); // every 5 seconds
 });
 
 
   socket.on('bingoClaim', ({ roomCode }) => {
-  console.log("claim initiated");
   const player = getCurrentPlayer(socket.id);
-
-  console.log("bingo called by" + player);
 
   const playerCard = roomCards[roomCode]?.[String(player.id)];
 
   const called = calledNumbers[roomCode] || new Set();
 
-  console.log("Player:", player);
-  console.log("Card:", playerCard);
-  console.log("Called Numbers:", called);
+  // console.log("Player:", player);
+  // console.log("Card:", playerCard);
+  // console.log("Called Numbers:", called);
 
   if (!player || !playerCard) return;
 
   // const hasBingo = checkBingo(playerCard, called);
   const hasBingo = checkBingo(playerCard, Array.from(called));
 
-  console.log(hasBingo)
 
   if (hasBingo) {
     // gameState[roomCode] = 'idle';
@@ -175,6 +170,7 @@ io.on('connection', (socket) => {
         winner: player.playerName,
         winners: claimedWinners[roomCode]
       });
+      stopNumcall(roomCode);
     }
   } else {
     socket.emit('bingoFailed', { message: "Nice try! But no Bingo yet 😅" });
@@ -234,12 +230,13 @@ socket.on('disconnect', () => {
     // Optionally: if host left, clean up room
     // For now, we'll just log it
     const remainingPlayers = getRoomPlayers(room);
-    if (remainingPlayers.length === 0) {
+    if (remainingPlayers.length <= 1) {
       console.log(`Room ${room} is now empty. Cleaning up...`);
       clearInterval(callIntervals[room]);
       delete callIntervals[room];
       delete calledNumbers[room];
       delete roomCards[room];
+      removeRoom(room);
     }
   }
 });
@@ -258,10 +255,24 @@ function generateRoomCode(){
   return Math.random().toString(36).substring(2, 8);
 }
 
+function stopNumcall(room){
+      clearInterval(callIntervals[room]);
+      delete callIntervals[room];
+      delete roomCards[room];
+}
+
 // Example cleanup if needed
 function clearRoom(roomCode) {
   clearInterval(callIntervals[roomCode]);
   delete callIntervals[roomCode];
   delete calledNumbers[roomCode];
   delete roomCards[roomCode];
+}
+
+function removeRoom(room) {
+  const index = rooms.findIndex(room => room === room);
+  if (index !== -1) {
+    return rooms.splice(index, 1)[0];
+  }
+
 }

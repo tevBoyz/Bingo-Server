@@ -210,8 +210,20 @@ socket.on('restartGame', ({ roomCode }) => {
 });
 
 socket.on('quitGame', ({roomCode}) => {
-  stopNumcall();
-  console.log("Game Quitted");
+  let p = getCurrentPlayer(socket.id);
+  playerLeave(socket.id);
+  let players = getRoomPlayers(roomCode);
+
+  if(players.length < 2) {
+  stopNumcall(roomCode);
+  }
+  
+    // Notify others in the room
+    socket.to(roomCode).emit('playerLeft', {
+      playerName: p.playerName,
+      players: players,
+    });
+  
 })
 
 //Handle player disconnects

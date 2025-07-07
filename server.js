@@ -27,13 +27,9 @@ app.use(express.static('public'));
 
 // Socket.io connection
 io.on('connection', (socket) => {
-  console.log('Connected to: ' + socket.id);
+  console.log('Connected to client with ID: ' + socket.id);
 
   // socket.emit('connect', {success: true})
-  
-  function sid(id){
-    return String(id);
-  }
 
   //Create room
   socket.on('host',({name}) =>{
@@ -82,7 +78,7 @@ io.on('connection', (socket) => {
 
   if (!players || players.length <= 1)
   {
-    console.log("No players Joined the group")
+    console.log("Not enoough players Joined the group to start the game.")
     return;
   }
 
@@ -104,7 +100,7 @@ io.on('connection', (socket) => {
   gameState[roomCode] = 'playing';
   // Inform all players
   io.to(roomCode).emit('gameInfo', {
-    info: `Bingo game started! Cards sent.`,
+    info: `Bingo game started.`,
   });
 
 });
@@ -118,7 +114,7 @@ io.on('connection', (socket) => {
     callIntervals[roomCode] = setInterval(() => {
       if (calledNumbers[roomCode].size >= 75) {
         clearInterval(callIntervals[roomCode]);
-        io.to(roomCode).emit('noMoreNumbers');
+        io.to(roomCode).emit('noMoreNumbers', {message: 'No more numbers to call. Game ended'});
         return;
       }
 
@@ -180,8 +176,8 @@ io.on('connection', (socket) => {
 //Restart a game
 socket.on('restartGame', ({ roomCode }) => {
   const players = getRoomPlayers(roomCode);
-  if (!players || players.length === 0) {
-    socket.emit('error', { message: "No players in the room to restart the game." });
+  if (!players || players.length <= 1) {
+    socket.emit('error', { message: "Not enough players in the room to restart the game." });
     return;
   }
 
@@ -198,8 +194,8 @@ socket.on('restartGame', ({ roomCode }) => {
     roomCards[roomCode][String(player.id)] = card;
 
     io.to(player.id).emit('gameRestarted', {
-      message: 'Game restarted!',
       yourCard: card,
+      roomCode: roomCode
     });
   });
 
@@ -207,11 +203,16 @@ socket.on('restartGame', ({ roomCode }) => {
 
   // Notify the entire room
   io.to(roomCode).emit('gameInfo', {
-    info: 'Game has been restarted! New cards have been dealt.',
+    info: 'Game has been restarted!',
   });
 
   console.log(`Game restarted for room ${roomCode}`);
 });
+
+socket.on('quitGame', ({roomCode}) => {
+  stopNumcall();
+  console.log("Game Quitted");
+})
 
 //Handle player disconnects
 socket.on('disconnect', () => {

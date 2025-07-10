@@ -10,7 +10,7 @@ const io = require('socket.io')(http, {
 
 
 //Utils Imports
-const { playerJoin, getCurrentPlayer, playerLeave, getRoomPlayers} = require('./utils/players');
+const { playerJoin, getCurrentPlayer, playerLeave, getRoomPlayers, checkID} = require('./utils/players');
 const { generateBingoCard, checkBingo } = require('./utils/bingo');
 
 //Global Variables
@@ -51,8 +51,9 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', ({player, room}) => {
       const roomExists = rooms.includes(room);
       const players = getRoomPlayers(room);
+      const newPlayer = !checkID(socket.id);
 
-      if(roomExists){
+      if(roomExists && newPlayer){
 
         if(players.length >= 15){
           socket.emit('playerLimitExceeded', {message: '15 players per room is allowed!'});
@@ -67,7 +68,8 @@ io.on('connection', (socket) => {
       io.to(room).emit('playerJoined', {room:room, players: getRoomPlayers(room)});
       }
       else{
-        io.to(socket.id).emit('roomNotFound', {message: "Room not Found"});
+        if(!roomExists)
+          io.to(socket.id).emit('roomNotFound', {message: "Room not Found"});
       }
     
 

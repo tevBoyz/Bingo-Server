@@ -7,6 +7,11 @@ function playerJoin(id, playerName, room) {
   return player;
 }
 
+function checkID(id){
+  let existes = false;
+  players.find(player => player.id === id ? existes = true : existes = false);
+  return existes;
+}
 
 //Get current player
 function getCurrentPlayer(id) {
@@ -30,5 +35,6 @@ module.exports = {
   playerJoin,
   getCurrentPlayer,
   playerLeave,
-  getRoomPlayers
+  getRoomPlayers,
+  checkID
 };
